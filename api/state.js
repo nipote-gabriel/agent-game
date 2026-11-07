@@ -1,6 +1,7 @@
-// GET /api/state?code=ABCD&token=...
-// Polled by each client about once a second. Also records that the player is still
-// here and removes players who stopped checking in.
+// GET /api/state?code=ABCD&token=...[&ping=1]
+// Polled by each client about once a second; a plain poll is a single Redis read.
+// With ping=1 (every few seconds) it also records that the player is still here
+// and removes players who stopped checking in.
 const store = require("../lib/store");
 const game = require("../lib/game");
 
@@ -11,6 +12,8 @@ module.exports = async (req, res) => {
   try {
     let lobby = await store.getLobby(code);
     if (!lobby || !lobby.players.some((p) => p.token === token)) return res.status(200).json({ gone: true });
+
+    if (!req.query.ping) return res.status(200).json({ state: game.viewFor(lobby, token) });
 
     await store.touch(code, token);
     const seen = await store.seenTimes(code);

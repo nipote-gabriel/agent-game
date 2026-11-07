@@ -15,7 +15,7 @@ async function create(body) {
   const lobby = game.newLobby(code);
   const token = game.addPlayer(lobby, body);
   await store.saveLobby(lobby);
-  await store.touch(code, token);
+  await store.touchNew(code, token);
   return { token, state: game.viewFor(lobby, token) };
 }
 
@@ -27,7 +27,7 @@ async function join(body) {
     if (!lobby) game.fail("No lobby with that code.");
     const token = game.addPlayer(lobby, body);
     await store.saveLobby(lobby);
-    await store.touch(code, token);
+    await store.touchNew(code, token);
     return { token, state: game.viewFor(lobby, token) };
   });
 }
@@ -48,7 +48,6 @@ async function act(body) {
 
     game.applyAction(lobby, me, body);
     await store.saveLobby(lobby);
-    await store.touch(code, me.token);
     return { state: game.viewFor(lobby, me.token) };
   });
 }

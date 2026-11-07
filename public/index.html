@@ -2,54 +2,96 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#14121f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Agent" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icon.svg" />
   <title>Agent Game</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <main>
-    <h1>Agent Game</h1>
-    <p id="notice" class="notice" hidden></p>
+  <div id="toast" class="toast" hidden></div>
 
-    <!-- Home: create or join -->
-    <section id="home" class="panel">
-      <label>Your name <input id="name" maxlength="20" placeholder="e.g. Sam" /></label>
-      <button id="createBtn" class="primary">Create lobby</button>
-      <div class="row">
-        <input id="codeInput" maxlength="4" placeholder="CODE" />
-        <button id="joinBtn">Join lobby</button>
-      </div>
-    </section>
-
-    <!-- Lobby -->
-    <section id="lobby" class="panel" hidden>
-      <p>Lobby code: <strong id="lobbyCode" class="code"></strong> <span class="muted">(share it with friends)</span></p>
-      <ul id="players" class="players"></ul>
-      <h3>Choose your avatar</h3>
-      <div id="avatars" class="avatars"></div>
-      <label>Rounds
-        <input id="rounds" type="number" min="1" max="50" />
+  <!-- Home: create or join -->
+  <section id="home" class="screen" hidden>
+    <header class="hero">
+      <div class="logo">🕵️</div>
+      <h1>Agent Game</h1>
+      <p class="muted">3 players · one Agent · two matching words</p>
+    </header>
+    <div class="stack">
+      <label class="field">
+        <span>Your name</span>
+        <input id="name" maxlength="20" placeholder="e.g. Sam" autocomplete="nickname" enterkeyhint="done" />
       </label>
-      <p id="roundsHint" class="muted"></p>
-      <button id="startBtn" class="primary">Start game</button>
-      <p id="startHint" class="muted"></p>
-      <button id="leaveBtn" class="link">Leave lobby</button>
-    </section>
-
-    <!-- Game -->
-    <section id="game" class="panel" hidden>
-      <p class="muted">Round <span id="round"></span> of <span id="totalRounds"></span></p>
-      <div id="card" class="card"></div>
-      <ul id="gamePlayers" class="players compact"></ul>
-      <div class="row">
-        <button id="refreshBtn">Refresh words</button>
-        <button id="nextBtn" class="primary">Next round</button>
+      <button id="createBtn" class="btn primary big">Create a lobby</button>
+      <div class="divider"><span>or join one</span></div>
+      <div class="join">
+        <input id="codeInput" maxlength="4" placeholder="CODE" autocomplete="off" autocorrect="off"
+               autocapitalize="characters" spellcheck="false" enterkeyhint="go" />
+        <button id="joinBtn" class="btn">Join</button>
       </div>
-      <button id="endBtn" class="link" hidden>End game</button>
-    </section>
+    </div>
+  </section>
 
-    <p id="error" class="error" hidden></p>
-  </main>
+  <!-- Lobby -->
+  <section id="lobby" class="screen" hidden>
+    <header class="bar">
+      <button id="leaveBtn" class="btn ghost small">← Leave</button>
+      <span class="muted">Lobby</span>
+      <span class="spacer"></span>
+    </header>
+    <div class="scroll">
+      <button id="shareBtn" class="codebox" aria-label="Share lobby code">
+        <span class="muted">Lobby code</span>
+        <strong id="lobbyCode" class="code"></strong>
+        <span class="share-hint">Tap to share invite link</span>
+      </button>
+
+      <h2 class="label">Players <span id="playerCount" class="muted"></span></h2>
+      <ul id="players" class="players"></ul>
+
+      <h2 class="label">Your avatar</h2>
+      <div id="avatars" class="avatars"></div>
+
+      <h2 class="label">Rounds</h2>
+      <div class="stepper">
+        <button id="roundsDown" class="btn round" aria-label="Fewer rounds">−</button>
+        <span id="rounds" class="stepper-value"></span>
+        <button id="roundsUp" class="btn round" aria-label="More rounds">+</button>
+      </div>
+      <p id="roundsHint" class="muted center"></p>
+    </div>
+    <footer class="dock">
+      <p id="startHint" class="muted center"></p>
+      <button id="startBtn" class="btn primary big">Start game</button>
+    </footer>
+  </section>
+
+  <!-- Game -->
+  <section id="game" class="screen" hidden>
+    <header class="bar">
+      <button id="endBtn" class="btn ghost small">End</button>
+      <span class="round-pill">Round <b id="round"></b> / <b id="totalRounds"></b></span>
+      <span class="spacer"></span>
+    </header>
+    <div class="card-area">
+      <button id="card" class="card" aria-label="Your card. Tap to hide or show."></button>
+      <p id="cardHint" class="muted center">Tap the card to hide it</p>
+    </div>
+    <ul id="gamePlayers" class="players chips"></ul>
+    <footer class="dock">
+      <div class="row">
+        <button id="refreshBtn" class="btn big">🔄 New words</button>
+        <button id="nextBtn" class="btn primary big">Next round</button>
+      </div>
+    </footer>
+  </section>
+
   <script src="client.js"></script>
 </body>
 </html>
