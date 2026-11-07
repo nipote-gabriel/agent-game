@@ -85,10 +85,22 @@
     </div>
     <ul id="gamePlayers" class="players chips"></ul>
     <footer class="dock">
-      <div class="row">
-        <button id="refreshBtn" class="btn big">🔄 New words</button>
-        <button id="nextBtn" class="btn primary big">Next round</button>
-      </div>
+      <p id="voteHint" class="muted center"></p>
+      <button id="nextBtn" class="btn primary big">Next round</button>
+    </footer>
+  </section>
+
+  <!-- Game over -->
+  <section id="over" class="screen" hidden>
+    <div class="over">
+      <div class="logo">🎉</div>
+      <h1>Game over!</h1>
+      <p id="overSummary" class="muted"></p>
+      <ul id="overPlayers" class="players chips"></ul>
+    </div>
+    <footer class="dock">
+      <button id="newGameBtn" class="btn primary big">New Game</button>
+      <button id="homeBtn" class="btn big">Home</button>
     </footer>
   </section>
 

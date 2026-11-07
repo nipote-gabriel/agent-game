@@ -31,7 +31,7 @@ const info = () => {
 };
 
 function show(view) {
-  for (const v of ["home", "lobby", "game"]) $(v).hidden = v !== view;
+  for (const v of ["home", "lobby", "game", "over"]) $(v).hidden = v !== view;
 }
 
 function toast(msg, { error = false, ms = 3000 } = {}) {
@@ -182,17 +182,26 @@ $("card").onclick = () => {
   cardCovered = !cardCovered;
   renderCard();
 };
-$("refreshBtn").onclick = (e) => send("refresh", {}, e.currentTarget);
-$("nextBtn").onclick = (e) => send("nextRound", { round: state?.game?.round }, e.currentTarget);
+$("nextBtn").onclick = (e) => {
+  const g = state?.game;
+  if (!g) return;
+  send("vote", { round: g.round, on: !g.votes.includes(state.you) }, e.currentTarget);
+};
+$("newGameBtn").onclick = (e) => send("newGame", {}, e.currentTarget);
+$("homeBtn").onclick = () => send("leave");
 $("endBtn").onclick = () => {
   if (confirm("End the game for everyone?")) send("endGame");
 };
 
-function renderPlayers(ul, s, { showEmpty = false } = {}) {
+function renderPlayers(ul, s, { showEmpty = false, votes = null } = {}) {
   ul.innerHTML = "";
   for (const p of s.players) {
     const li = document.createElement("li");
     li.innerHTML = `<span class="avatar"></span><span class="pname"></span>`;
+    if (votes?.includes(p.id)) {
+      li.classList.add("voted");
+      li.insertAdjacentHTML("beforeend", `<span class="check" aria-label="voted">✓</span>`);
+    }
     li.querySelector(".avatar").textContent = p.avatar;
     li.querySelector(".pname").textContent = p.name + (p.id === s.you ? " (you)" : "");
     if (p.id === s.hostId) {
@@ -228,7 +237,7 @@ function renderCard(animate = false) {
 function render(s) {
   if (s.notice && s.notice.id !== lastNotice && (lastNotice !== null || state)) toast(s.notice.text, { ms: 4000 });
   lastNotice = s.notice ? s.notice.id : "";
-  const prevVersion = state?.game ? `${state.game.round}-${state.game.wordVersion}` : null;
+  const prevRound = state?.game && !state.game.finished ? state.game.round : null;
   state = s;
   const isHost = s.you === s.hostId;
   const full = s.players.length === s.maxPlayers;
@@ -266,17 +275,32 @@ function render(s) {
     return;
   }
 
+  if (s.game.finished) {
+    show("over");
+    const n = s.game.totalRounds;
+    $("overSummary").textContent = `${n} round${n > 1 ? "s" : ""} played`;
+    renderPlayers($("overPlayers"), s);
+    return;
+  }
+
   show("game");
   $("round").textContent = s.game.round;
   $("totalRounds").textContent = s.game.totalRounds;
-  const changed = prevVersion !== `${s.game.round}-${s.game.wordVersion}`;
+  const changed = prevRound !== s.game.round;
   if (changed) {
     cardCovered = false;
     navigator.vibrate?.(40);
   }
   renderCard(changed);
-  renderPlayers($("gamePlayers"), s);
-  $("nextBtn").textContent = s.game.round >= s.game.totalRounds ? "Finish" : "Next round";
+  const { votes, votesNeeded } = s.game;
+  renderPlayers($("gamePlayers"), s, { votes });
+  const iVoted = votes.includes(s.you);
+  const last = s.game.round >= s.game.totalRounds;
+  const btn = $("nextBtn");
+  btn.textContent = iVoted ? "✓ Voted · tap to undo" : last ? "Finish game" : "Next round";
+  btn.classList.toggle("voted", iVoted);
+  btn.classList.toggle("primary", !iVoted);
+  $("voteHint").textContent = `${votes.length}/${votesNeeded} votes to ${last ? "finish" : "move on"}`;
   $("endBtn").style.visibility = isHost ? "visible" : "hidden";
 }
 
