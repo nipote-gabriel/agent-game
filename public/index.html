@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agent Game</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main>
+    <h1>Agent Game</h1>
+    <p id="notice" class="notice" hidden></p>
+
+    <!-- Home: create or join -->
+    <section id="home" class="panel">
+      <label>Your name <input id="name" maxlength="20" placeholder="e.g. Sam" /></label>
+      <button id="createBtn" class="primary">Create lobby</button>
+      <div class="row">
+        <input id="codeInput" maxlength="4" placeholder="CODE" />
+        <button id="joinBtn">Join lobby</button>
+      </div>
+    </section>
+
+    <!-- Lobby -->
+    <section id="lobby" class="panel" hidden>
+      <p>Lobby code: <strong id="lobbyCode" class="code"></strong> <span class="muted">(share it with friends)</span></p>
+      <ul id="players" class="players"></ul>
+      <h3>Choose your avatar</h3>
+      <div id="avatars" class="avatars"></div>
+      <label>Rounds
+        <input id="rounds" type="number" min="1" max="50" />
+      </label>
+      <p id="roundsHint" class="muted"></p>
+      <button id="startBtn" class="primary">Start game</button>
+      <p id="startHint" class="muted"></p>
+      <button id="leaveBtn" class="link">Leave lobby</button>
+    </section>
+
+    <!-- Game -->
+    <section id="game" class="panel" hidden>
+      <p class="muted">Round <span id="round"></span> of <span id="totalRounds"></span></p>
+      <div id="card" class="card"></div>
+      <ul id="gamePlayers" class="players compact"></ul>
+      <div class="row">
+        <button id="refreshBtn">Refresh words</button>
+        <button id="nextBtn" class="primary">Next round</button>
+      </div>
+      <button id="endBtn" class="link" hidden>End game</button>
+    </section>
+
+    <p id="error" class="error" hidden></p>
+  </main>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="client.js"></script>
+</body>
+</html>
