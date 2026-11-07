@@ -17,6 +17,8 @@ A small multiplayer party game for exactly 3 players.
    and connect it to the project. That sets the `KV_REST_API_URL` / `KV_REST_API_TOKEN`
    (or `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`) environment variables.
 3. Redeploy so the functions pick up the new variables.
+4. Check `https://<your-domain>/api/health`. It should show `"ok": true` and `"storage": "redis"`.
+   It lists the Redis env var names it found (never their values) and the deployed commit.
 
 ## Run locally
 
