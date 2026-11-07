@@ -1,11 +1,21 @@
-const socket = io();
 const $ = (id) => document.getElementById(id);
+const POLL_MS = 1000;
 let state = null;
+let session = load("session"); // { code, token } of the lobby we're in
+let pollTimer = null;
+let lastNotice = null;
+
+function load(k) {
+  try { return JSON.parse(localStorage.getItem(k)); } catch { return null; }
+}
+function save(k, v) {
+  try { localStorage.setItem(k, JSON.stringify(v)); } catch {}
+}
 
 const nameInput = $("name");
-nameInput.value = localStorage.getItem("name") || "";
+nameInput.value = load("name") || "";
 const info = () => {
-  localStorage.setItem("name", nameInput.value.trim());
+  save("name", nameInput.value.trim());
   return { name: nameInput.value };
 };
 
@@ -32,29 +42,77 @@ function playerList(ul, players, s) {
   }
 }
 
-$("createBtn").onclick = () => socket.emit("create", info());
-$("joinBtn").onclick = () => socket.emit("join", { ...info(), code: $("codeInput").value });
+function goHome(msg) {
+  session = null;
+  save("session", null);
+  state = null;
+  lastNotice = null;
+  clearTimeout(pollTimer);
+  show("home");
+  if (msg) flash($("error"), msg);
+}
+
+// Handle any server response: { state } | { gone } | { error }.
+function handle(res) {
+  if (res.error) return flash($("error"), res.error);
+  if (res.gone) return goHome(session ? "You're no longer in that lobby." : null);
+  if (res.token) {
+    session = { code: res.state.code, token: res.token };
+    save("session", session);
+    schedulePoll();
+  }
+  if (res.state) render(res.state);
+}
+
+async function send(action, extra = {}) {
+  try {
+    const r = await fetch("/api/action", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, ...session, ...extra }),
+    });
+    const res = await r.json();
+    if (action === "leave") return goHome();
+    handle(res);
+  } catch {
+    flash($("error"), "Couldn't reach the server.");
+  }
+}
+
+async function poll() {
+  if (!session) return;
+  const mine = session;
+  try {
+    const r = await fetch(`/api/state?code=${encodeURIComponent(mine.code)}&token=${encodeURIComponent(mine.token)}`);
+    if (session === mine) handle(await r.json());
+  } catch {
+    // network blip: just try again next tick
+  }
+  if (session === mine) schedulePoll();
+}
+
+function schedulePoll() {
+  clearTimeout(pollTimer);
+  pollTimer = setTimeout(poll, POLL_MS);
+}
+
+$("createBtn").onclick = () => send("create", info());
+$("joinBtn").onclick = () => send("join", { ...info(), code: $("codeInput").value });
 $("codeInput").addEventListener("keydown", (e) => e.key === "Enter" && $("joinBtn").click());
-$("startBtn").onclick = () => socket.emit("start");
-$("leaveBtn").onclick = () => socket.emit("leave");
-$("refreshBtn").onclick = () => socket.emit("refresh");
-$("nextBtn").onclick = () => socket.emit("nextRound");
-$("endBtn").onclick = () => socket.emit("endGame");
-$("rounds").onchange = (e) => socket.emit("setRounds", e.target.value);
+$("startBtn").onclick = () => send("start");
+$("leaveBtn").onclick = () => send("leave");
+$("refreshBtn").onclick = () => send("refresh");
+$("nextBtn").onclick = () => send("nextRound", { round: state?.game?.round });
+$("endBtn").onclick = () => send("endGame");
+$("rounds").onchange = (e) => send("setRounds", { rounds: e.target.value });
+// Check in right away when the tab comes back into view.
+document.addEventListener("visibilitychange", () => !document.hidden && session && poll());
 
-socket.on("errorMsg", (msg) => flash($("error"), msg));
-socket.on("notice", (msg) => flash($("notice"), msg, 5000));
-socket.on("left", () => {
-  state = null;
-  show("home");
-});
-socket.on("disconnect", () => {
-  state = null;
-  show("home");
-  flash($("error"), "Disconnected from server.");
-});
-
-socket.on("state", (s) => {
+function render(s) {
+  if (s.notice && s.notice.id !== lastNotice) {
+    if (lastNotice !== null || state) flash($("notice"), s.notice.text, 5000);
+  }
+  lastNotice = s.notice ? s.notice.id : "";
   const prevVersion = state?.game ? `${state.game.round}-${state.game.wordVersion}` : null;
   state = s;
   const isHost = s.you === s.hostId;
@@ -74,7 +132,7 @@ socket.on("state", (s) => {
       b.textContent = a;
       b.className = "avatar-btn" + (a === me.avatar ? " selected" : "");
       b.disabled = taken.has(a);
-      b.onclick = () => socket.emit("setAvatar", a);
+      b.onclick = () => send("setAvatar", { avatar: a });
       box.appendChild(b);
     }
 
@@ -104,4 +162,8 @@ socket.on("state", (s) => {
   playerList($("gamePlayers"), s.players, s);
   $("nextBtn").textContent = s.game.round >= s.game.totalRounds ? "Finish game" : "Next round";
   $("endBtn").hidden = !isHost;
-});
+}
+
+// Rejoin the lobby we were in if the page was reloaded.
+if (session) poll();
+else show("home");

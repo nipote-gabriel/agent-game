@@ -2,9 +2,9 @@
   "name": "agent-game",
   "version": "1.0.0",
   "description": "Multiplayer party game: one Agent, two matching words.",
-  "main": "server.js",
+  "main": "dev-server.js",
   "scripts": {
-    "start": "node server.js"
+    "local": "node dev-server.js"
   },
   "repository": {
     "type": "git",
@@ -15,11 +15,10 @@
     "url": "https://github.com/nipote-gabriel/agent-game/issues"
   },
   "homepage": "https://github.com/nipote-gabriel/agent-game#readme",
-  "dependencies": {
-    "express": "^4.22.3",
-    "socket.io": "^4.8.4"
-  },
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.41.0"
   }
 }
