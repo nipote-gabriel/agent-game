@@ -40,6 +40,6 @@ module.exports = async (req, res) => {
     res.status(200).json({ state: game.viewFor(lobby, token) });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: e.message || "Server error" });
+    res.status(e.status || 500).json({ error: e.message || "Server error" });
   }
 };

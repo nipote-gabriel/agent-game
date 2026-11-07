@@ -64,6 +64,6 @@ module.exports = async (req, res) => {
   } catch (e) {
     if (e instanceof game.GameError) return res.status(400).json({ error: e.message });
     console.error(e);
-    res.status(500).json({ error: e.message || "Server error" });
+    res.status(e.status || 500).json({ error: e.message || "Server error" });
   }
 };

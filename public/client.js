@@ -67,32 +67,57 @@ function handle(res) {
   if (res.state) render(res.state);
 }
 
-async function send(action, extra = {}) {
+// Fetch JSON with a timeout; turns non-JSON responses (e.g. a crashed function) into readable errors.
+async function api(url, opts = {}, ms = 10000) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
   try {
-    const r = await fetch("/api/action", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action, ...session, ...extra }),
-    });
-    const res = await r.json();
-    if (action === "leave") return goHome();
-    handle(res);
-  } catch {
-    toast("Couldn't reach the server.", { error: true });
+    const r = await fetch(url, { ...opts, signal: ctrl.signal, cache: "no-store" });
+    const text = await r.text();
+    try {
+      return JSON.parse(text);
+    } catch {
+      return { error: `Server error (${r.status}). Check /api/health.` };
+    }
+  } catch (e) {
+    return { error: e.name === "AbortError" ? "The server took too long to respond." : "Couldn't reach the server.", network: true };
+  } finally {
+    clearTimeout(timer);
   }
+}
+
+let busy = false;
+async function send(action, extra = {}, button) {
+  // Buttons ignore taps while their request is in flight.
+  if (button && busy) return;
+  if (button) busy = true;
+  const label = button?.textContent;
+  if (button) {
+    button.disabled = true;
+    if (action === "create" || action === "join") button.textContent = action === "create" ? "Creating…" : "Joining…";
+  }
+  const res = await api("/api/action", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action, ...session, ...extra }),
+  });
+  if (button) {
+    busy = false;
+    button.disabled = false;
+    if (label) button.textContent = label;
+  }
+  if (action === "leave" && !res.error) return goHome();
+  handle(res);
 }
 
 async function poll() {
   if (!session) return;
   const mine = session;
   const ping = document.hidden || pollCount++ % PING_EVERY === 0 ? "&ping=1" : "";
-  try {
-    const q = `code=${encodeURIComponent(mine.code)}&token=${encodeURIComponent(mine.token)}${ping}`;
-    const r = await fetch(`/api/state?${q}`, { cache: "no-store" });
-    if (session === mine) handle(await r.json());
-  } catch {
-    // network blip: just try again next tick
-  }
+  const q = `code=${encodeURIComponent(mine.code)}&token=${encodeURIComponent(mine.token)}${ping}`;
+  const res = await api(`/api/state?${q}`);
+  // Ignore network blips while polling; just try again next tick.
+  if (session === mine && !res.network) handle(res);
   if (session === mine) schedulePoll();
 }
 
@@ -109,10 +134,10 @@ document.addEventListener("visibilitychange", () => {
 });
 
 // --- Home ---
-$("createBtn").onclick = () => send("create", info());
+$("createBtn").onclick = (e) => send("create", info(), e.currentTarget);
 $("joinBtn").onclick = () => {
   if (!$("codeInput").value.trim()) return $("codeInput").focus();
-  send("join", { ...info(), code: $("codeInput").value });
+  send("join", { ...info(), code: $("codeInput").value }, $("joinBtn"));
 };
 $("codeInput").addEventListener("input", (e) => (e.target.value = e.target.value.toUpperCase().replace(/[^A-Z]/g, "")));
 $("codeInput").addEventListener("keydown", (e) => e.key === "Enter" && $("joinBtn").click());
@@ -120,7 +145,7 @@ nameInput.addEventListener("keydown", (e) => e.key === "Enter" && nameInput.blur
 
 // --- Lobby ---
 $("leaveBtn").onclick = () => send("leave");
-$("startBtn").onclick = () => send("start");
+$("startBtn").onclick = (e) => send("start", {}, e.currentTarget);
 $("shareBtn").onclick = async () => {
   if (!state) return;
   const url = `${location.origin}/?code=${state.code}`;
@@ -157,8 +182,8 @@ $("card").onclick = () => {
   cardCovered = !cardCovered;
   renderCard();
 };
-$("refreshBtn").onclick = () => send("refresh");
-$("nextBtn").onclick = () => send("nextRound", { round: state?.game?.round });
+$("refreshBtn").onclick = (e) => send("refresh", {}, e.currentTarget);
+$("nextBtn").onclick = (e) => send("nextRound", { round: state?.game?.round }, e.currentTarget);
 $("endBtn").onclick = () => {
   if (confirm("End the game for everyone?")) send("endGame");
 };

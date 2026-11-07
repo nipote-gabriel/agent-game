@@ -8,7 +8,11 @@ const { URL } = require("url");
 const PORT = process.env.PORT || 3000;
 const PUBLIC = path.join(__dirname, "public");
 const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml" };
-const routes = { "/api/action": require("./api/action"), "/api/state": require("./api/state") };
+const routes = {
+  "/api/action": require("./api/action"),
+  "/api/state": require("./api/state"),
+  "/api/health": require("./api/health"),
+};
 
 http
   .createServer(async (req, res) => {
