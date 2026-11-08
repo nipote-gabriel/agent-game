@@ -330,7 +330,7 @@ const OUTCOMES = {
 function renderResult(s) {
   const firstShow = $("over").hidden;
   show("over");
-  const { outcome, agentId, accusations, roster } = s.game.result;
+  const { outcome, agentId, accusations, roster, words } = s.game.result;
   const byId = Object.fromEntries(roster.map((p) => [p.id, p]));
   const iAmAgent = s.you === agentId;
 
@@ -372,6 +372,16 @@ function renderResult(s) {
     }
     list.appendChild(li);
   }
+  const wordList = $("wordList");
+  wordList.innerHTML = "";
+  words.forEach((w, i) => {
+    const li = document.createElement("li");
+    li.innerHTML = `<span class="rnum"></span><span class="w"></span>`;
+    li.firstChild.textContent = words.length > 1 ? `R${i + 1}` : "";
+    li.lastChild.textContent = w;
+    wordList.appendChild(li);
+  });
+
   const n = s.game.totalRounds;
   $("overSummary").textContent = `${n} round${n > 1 ? "s" : ""} played`;
 }

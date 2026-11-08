@@ -178,6 +178,13 @@ input:focus { border-color: var(--accent); }
 .reveal { display: flex; align-items: center; justify-content: center; gap: 10px; }
 .agent-reveal { display: flex; align-items: center; gap: 8px; font-size: 1.15rem; font-weight: 700; background: var(--panel); padding: 6px 16px 6px 10px; border-radius: 99px; }
 .agent-reveal .avatar { font-size: 1.8rem; }
+.word-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.word-list li {
+  display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 99px;
+  background: linear-gradient(150deg, #064e3b, #047857); font-weight: 700;
+}
+.word-list .rnum { font-size: 0.7rem; font-weight: 600; opacity: 0.75; }
+.word-list .rnum:empty { display: none; }
 .players.votes { gap: 6px; }
 .players.votes li { gap: 8px; min-height: 46px; padding: 6px 12px; }
 .players.votes .avatar { font-size: 1.4rem; width: 1.8rem; }
