@@ -9,7 +9,12 @@ A small multiplayer party game for exactly 3 players.
   of that game. Each round, the other two get the same adjective (e.g. "Purple").
 - **Next round** is a vote: when 2 of the 3 players have pressed it, everyone moves to the next round
   with a new word. Tap it again to take your vote back.
-- After the last round, everyone sees a game-over screen with **New Game** (back to the lobby with the
+- After the last round, everyone votes for who they think the Agent is (you can't pick yourself, and you
+  can change your pick until all three have voted):
+  - both Citizens pick the Agent → **Citizens win**
+  - two votes land on the same non-Agent → **the Agent wins**
+  - one vote each (1, 1, 1) → **Stalemate**
+- The result screen reveals the Agent and everyone's votes, with **New Game** (back to the lobby with the
   same players) and **Home**.
 
 ## Deploy on Vercel
@@ -35,7 +40,7 @@ Without the Redis env vars, lobbies are stored in memory. That's fine for local 
 
 ## How it works
 
-- `api/action.js`: every change (create, join, avatar, rounds, start, vote, new game, leave).
+- `api/action.js`: every change (create, join, avatar, rounds, start, vote, accuse, new game, leave).
 - `api/state.js`: each browser polls this about once a second (one Redis read), and pings every 5s
   to say it's still there. That's about 1.4 Redis commands per player per second. Players who stop pinging are removed
   (after 30s in the lobby, or 5 min during a game, so locking your phone briefly doesn't end it).

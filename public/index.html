@@ -90,13 +90,42 @@
     </footer>
   </section>
 
-  <!-- Game over -->
+  <!-- Accusation vote -->
+  <section id="accuse" class="screen" hidden>
+    <header class="bar">
+      <span class="spacer"></span>
+      <span class="round-pill">Final vote</span>
+      <span class="spacer"></span>
+    </header>
+    <div class="scroll">
+      <div class="accuse-head">
+        <div class="logo">🔍</div>
+        <h1>Who's the Agent?</h1>
+        <p class="muted">Tap the player you think is the Agent. You can change your pick until everyone has voted.</p>
+      </div>
+      <div id="suspects" class="suspects"></div>
+    </div>
+    <footer class="dock">
+      <p id="accuseHint" class="muted center"></p>
+      <ul id="accusePlayers" class="players chips"></ul>
+    </footer>
+  </section>
+
+  <!-- Result -->
   <section id="over" class="screen" hidden>
-    <div class="over">
-      <div class="logo">🎉</div>
-      <h1>Game over!</h1>
-      <p id="overSummary" class="muted"></p>
-      <ul id="overPlayers" class="players chips"></ul>
+    <div class="scroll result">
+      <div id="banner" class="banner">
+        <div id="bannerEmoji" class="logo"></div>
+        <h1 id="bannerTitle"></h1>
+        <p id="bannerSub"></p>
+      </div>
+      <div class="reveal">
+        <span class="muted">The Agent was</span>
+        <div id="agentReveal" class="agent-reveal"></div>
+      </div>
+      <h2 class="label">Votes</h2>
+      <ul id="voteList" class="players votes"></ul>
+      <p id="overSummary" class="muted center"></p>
     </div>
     <footer class="dock">
       <button id="newGameBtn" class="btn primary big">New Game</button>

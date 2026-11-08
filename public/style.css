@@ -148,10 +148,43 @@ input:focus { border-color: var(--accent); }
 .players.chips .check { color: var(--accent-2); font-weight: 800; }
 .btn.voted { background: var(--panel-2); box-shadow: inset 0 0 0 2px var(--accent); }
 
-/* Game over */
-#over { justify-content: center; }
-.over { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; }
-.over h1 { font-size: 2.2rem; }
+/* Accusation vote */
+.accuse-head { text-align: center; display: flex; flex-direction: column; gap: 6px; margin: 8px 0 12px; }
+.accuse-head h1 { font-size: 1.9rem; }
+.suspects { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.suspect {
+  font: inherit; color: var(--text); cursor: pointer; touch-action: manipulation;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  aspect-ratio: 3 / 4; border-radius: 22px; border: 2px solid var(--line); background: var(--panel);
+  transition: transform 0.1s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.suspect:active { transform: scale(0.97); }
+.suspect .big-avatar { font-size: 4rem; line-height: 1; }
+.suspect .sname { font-weight: 700; font-size: 1.1rem; max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.suspect .pick { font-size: 0.85rem; color: var(--muted); }
+.suspect.selected { border-color: var(--agent); background: linear-gradient(160deg, #3b1420, var(--panel)); }
+.suspect.selected .pick { color: #fca5a5; font-weight: 700; }
+
+/* Result */
+.result { justify-content: center; gap: 12px; }
+.result .label { margin-top: 0; }
+.banner { text-align: center; border-radius: 24px; padding: 16px; display: flex; flex-direction: column; gap: 4px; }
+.banner .logo { font-size: 44px; margin-bottom: 0; }
+.banner h1 { font-size: 2rem; line-height: 1.1; }
+.banner p { font-weight: 600; font-size: 1.1rem; opacity: 0.9; }
+.banner.citizens { background: linear-gradient(150deg, #064e3b, var(--word)); }
+.banner.agent { background: linear-gradient(150deg, #7f1d1d, var(--agent)); }
+.banner.stalemate { background: linear-gradient(150deg, #312e81, #6366f1); }
+.reveal { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.agent-reveal { display: flex; align-items: center; gap: 8px; font-size: 1.15rem; font-weight: 700; background: var(--panel); padding: 6px 16px 6px 10px; border-radius: 99px; }
+.agent-reveal .avatar { font-size: 1.8rem; }
+.players.votes { gap: 6px; }
+.players.votes li { gap: 8px; min-height: 46px; padding: 6px 12px; }
+.players.votes .avatar { font-size: 1.4rem; width: 1.8rem; }
+.players.votes .arrow { color: var(--muted); }
+.players.votes .mark { margin-left: auto; font-weight: 800; }
+.players.votes .mark.right { color: var(--word); }
+.players.votes .mark.wrong { color: var(--agent); }
 
 /* Toast */
 .toast {

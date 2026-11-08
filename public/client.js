@@ -31,7 +31,7 @@ const info = () => {
 };
 
 function show(view) {
-  for (const v of ["home", "lobby", "game", "over"]) $(v).hidden = v !== view;
+  for (const v of ["home", "lobby", "game", "accuse", "over"]) $(v).hidden = v !== view;
 }
 
 function toast(msg, { error = false, ms = 3000 } = {}) {
@@ -237,7 +237,7 @@ function renderCard(animate = false) {
 function render(s) {
   if (s.notice && s.notice.id !== lastNotice && (lastNotice !== null || state)) toast(s.notice.text, { ms: 4000 });
   lastNotice = s.notice ? s.notice.id : "";
-  const prevRound = state?.game && !state.game.finished ? state.game.round : null;
+  const prevRound = state?.game?.phase === "play" ? state.game.round : null;
   state = s;
   const isHost = s.you === s.hostId;
   const full = s.players.length === s.maxPlayers;
@@ -275,13 +275,8 @@ function render(s) {
     return;
   }
 
-  if (s.game.finished) {
-    show("over");
-    const n = s.game.totalRounds;
-    $("overSummary").textContent = `${n} round${n > 1 ? "s" : ""} played`;
-    renderPlayers($("overPlayers"), s);
-    return;
-  }
+  if (s.game.phase === "accuse") return renderAccuse(s);
+  if (s.game.phase === "result") return renderResult(s);
 
   show("game");
   $("round").textContent = s.game.round;
@@ -297,11 +292,88 @@ function render(s) {
   const iVoted = votes.includes(s.you);
   const last = s.game.round >= s.game.totalRounds;
   const btn = $("nextBtn");
-  btn.textContent = iVoted ? "✓ Voted · tap to undo" : last ? "Finish game" : "Next round";
+  btn.textContent = iVoted ? "✓ Voted · tap to undo" : last ? "Vote for the Agent" : "Next round";
   btn.classList.toggle("voted", iVoted);
   btn.classList.toggle("primary", !iVoted);
-  $("voteHint").textContent = `${votes.length}/${votesNeeded} votes to ${last ? "finish" : "move on"}`;
+  $("voteHint").textContent = `${votes.length}/${votesNeeded} votes to ${last ? "start the final vote" : "move on"}`;
   $("endBtn").style.visibility = isHost ? "visible" : "hidden";
+}
+
+function renderAccuse(s) {
+  show("accuse");
+  const { accused, myAccusation } = s.game;
+  const box = $("suspects");
+  box.innerHTML = "";
+  for (const p of s.players.filter((p) => p.id !== s.you)) {
+    const b = document.createElement("button");
+    b.className = "suspect" + (p.id === myAccusation ? " selected" : "");
+    b.innerHTML = `<span class="big-avatar"></span><span class="sname"></span><span class="pick"></span>`;
+    b.querySelector(".big-avatar").textContent = p.avatar;
+    b.querySelector(".sname").textContent = p.name;
+    b.querySelector(".pick").textContent = p.id === myAccusation ? "🕵️ Your pick" : "Tap to accuse";
+    b.onclick = () => p.id !== myAccusation && send("accuse", { target: p.id }, b);
+    box.appendChild(b);
+  }
+  const waiting = s.players.length - accused.length;
+  $("accuseHint").textContent = myAccusation
+    ? `Waiting for ${waiting} more vote${waiting === 1 ? "" : "s"}…`
+    : `${accused.length}/${s.players.length} have voted`;
+  renderPlayers($("accusePlayers"), s, { votes: accused });
+}
+
+const OUTCOMES = {
+  citizens: { emoji: "🎉", title: "Citizens win!" },
+  agent: { emoji: "🕵️", title: "The Agent wins!" },
+  stalemate: { emoji: "🤝", title: "Stalemate" },
+};
+
+function renderResult(s) {
+  const firstShow = $("over").hidden;
+  show("over");
+  const { outcome, agentId, accusations, roster } = s.game.result;
+  const byId = Object.fromEntries(roster.map((p) => [p.id, p]));
+  const iAmAgent = s.you === agentId;
+
+  const o = OUTCOMES[outcome];
+  $("banner").className = "banner " + outcome;
+  $("bannerEmoji").textContent = o.emoji;
+  $("bannerTitle").textContent = o.title;
+  $("bannerSub").textContent =
+    outcome === "stalemate"
+      ? "Everyone voted differently. Nobody wins."
+      : (outcome === "agent") === iAmAgent
+        ? "You won! 🏆"
+        : "You lost.";
+  if (firstShow) navigator.vibrate?.(outcome === "stalemate" ? 60 : [60, 60, 120]);
+
+  const agent = byId[agentId];
+  $("agentReveal").innerHTML = `<span class="avatar"></span><span></span>`;
+  $("agentReveal").firstChild.textContent = agent.avatar;
+  $("agentReveal").lastChild.textContent = agent.name + (iAmAgent ? " (you)" : "");
+
+  const list = $("voteList");
+  list.innerHTML = "";
+  for (const p of [...roster].sort((x, y) => (x.id === agentId) - (y.id === agentId))) {
+    const target = byId[accusations[p.id]];
+    const right = target.id === agentId;
+    const li = document.createElement("li");
+    li.innerHTML = `<span class="avatar"></span><span class="pname"></span><span class="arrow">→</span><span class="avatar"></span><span class="pname"></span><span class="mark"></span>`;
+    const [a1, n1, , a2, n2, mark] = li.children;
+    a1.textContent = p.avatar;
+    n1.textContent = p.id === s.you ? "You" : p.name;
+    a2.textContent = target.avatar;
+    n2.textContent = target.id === s.you ? "you" : target.name;
+    if (p.id !== agentId) {
+      mark.textContent = right ? "✓" : "✗";
+      mark.classList.add(right ? "right" : "wrong");
+    } else {
+      mark.textContent = "Agent";
+      mark.classList.add("muted");
+    }
+    list.appendChild(li);
+  }
+  const n = s.game.totalRounds;
+  $("overSummary").textContent = `${n} round${n > 1 ? "s" : ""} played`;
 }
 
 // Start: rejoin our lobby after a reload, or prefill a code from an invite link.
