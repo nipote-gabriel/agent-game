@@ -11,8 +11,9 @@ A small multiplayer party game for exactly 3 players.
   synonym as a hint (e.g. "Taboo"), and gets one more random letter every round, Wheel of Fortune style: every copy of a revealed letter shows up.
 - Each round has a **Judge**, highlighted in gold on the name tags. It rotates around the table each round,
   starting from a random player.
-- Every round starts on a **Choose your people** screen with no cards showing: everyone names a public
-  figure out loud. When 2 of the 3 players tap **Generate Words**, the cards appear.
+- Round 1 opens straight on the cards. Every later round starts on a **Choose your people** screen with
+  no cards showing: everyone names a public figure out loud. When 2 of the 3 players tap
+  **Generate Words**, the cards appear.
 - **Next round** is a vote: when 2 of the 3 players have pressed it, everyone moves to the next round.
   The last round (the host's round count) can't be skipped.
 - **Lock-ins:** at any time, tap a name tag to lock in who you think the Agent is (tap again to unlock).
