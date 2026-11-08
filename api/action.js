@@ -46,8 +46,14 @@ async function act(body) {
       return { gone: true };
     }
 
-    game.applyAction(lobby, me, body);
+    const ctx = {};
+    if (body.action === "start") ctx.recentPhrases = await store.getRecentPhrases();
+    game.applyAction(lobby, me, body, ctx);
     await store.saveLobby(lobby);
+    if (body.action === "start" && lobby.game) {
+      const list = [...ctx.recentPhrases.filter((p) => p !== lobby.game.phrase), lobby.game.phrase];
+      await store.saveRecentPhrases(list.slice(-game.RECENT_WINDOW()));
+    }
     return { state: game.viewFor(lobby, me.token) };
   });
 }
