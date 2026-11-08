@@ -187,7 +187,11 @@ $("nextBtn").onclick = (e) => {
   if (!g) return;
   send("vote", { round: g.round, on: !g.votes.includes(state.you) }, e.currentTarget);
 };
-$("genBtn").onclick = (e) => send("reveal", { round: state?.game?.round }, e.currentTarget);
+$("genBtn").onclick = (e) => {
+  const g = state?.game;
+  if (!g) return;
+  send("reveal", { round: g.round, on: !g.votes.includes(state.you) }, e.currentTarget);
+};
 $("newGameBtn").onclick = (e) => send("newGame", {}, e.currentTarget);
 $("homeBtn").onclick = () => send("leave");
 $("endBtn").onclick = () => {
@@ -291,8 +295,14 @@ function render(s) {
   $("genBtn").hidden = !picking;
   $("nextBtn").hidden = picking;
   if (picking) {
-    renderPlayers($("gamePlayers"), s);
-    $("voteHint").textContent = "Tap when everyone has picked";
+    const { votes, votesNeeded } = s.game;
+    renderPlayers($("gamePlayers"), s, { votes });
+    const iVoted = votes.includes(s.you);
+    const gen = $("genBtn");
+    gen.textContent = iVoted ? "✓ Ready · tap to undo" : "✨ Generate Words";
+    gen.classList.toggle("voted", iVoted);
+    gen.classList.toggle("primary", !iVoted);
+    $("voteHint").textContent = `${votes.length}/${votesNeeded} votes to generate`;
     return;
   }
 
