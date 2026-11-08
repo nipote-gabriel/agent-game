@@ -198,7 +198,7 @@ $("endBtn").onclick = () => {
   if (confirm("End the game for everyone?")) send("endGame");
 };
 
-function renderPlayers(ul, s, { showEmpty = false, votes = null } = {}) {
+function renderPlayers(ul, s, { showEmpty = false, votes = null, judgeId = null } = {}) {
   ul.innerHTML = "";
   for (const p of s.players) {
     const li = document.createElement("li");
@@ -209,7 +209,13 @@ function renderPlayers(ul, s, { showEmpty = false, votes = null } = {}) {
     }
     li.querySelector(".avatar").textContent = p.avatar;
     li.querySelector(".pname").textContent = p.name + (p.id === s.you ? " (you)" : "");
-    if (p.id === s.hostId) {
+    if (p.id === judgeId) {
+      li.classList.add("judge");
+      const tag = document.createElement("span");
+      tag.className = "tag judge-tag";
+      tag.textContent = "⚖️ Judge";
+      li.appendChild(tag);
+    } else if (p.id === s.hostId) {
       const tag = document.createElement("span");
       tag.className = "tag";
       tag.textContent = "host";
@@ -296,7 +302,7 @@ function render(s) {
   $("nextBtn").hidden = picking;
   if (picking) {
     const { votes, votesNeeded } = s.game;
-    renderPlayers($("gamePlayers"), s, { votes });
+    renderPlayers($("gamePlayers"), s, { votes, judgeId: s.game.judgeId });
     const iVoted = votes.includes(s.you);
     const gen = $("genBtn");
     gen.textContent = iVoted ? "✓ Ready · tap to undo" : "✨ Generate Words";
@@ -314,7 +320,7 @@ function render(s) {
   }
   renderCard(changed);
   const { votes, votesNeeded } = s.game;
-  renderPlayers($("gamePlayers"), s, { votes });
+  renderPlayers($("gamePlayers"), s, { votes, judgeId: s.game.judgeId });
   const iVoted = votes.includes(s.you);
   const last = s.game.round >= s.game.totalRounds;
   const btn = $("nextBtn");

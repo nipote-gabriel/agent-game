@@ -7,6 +7,8 @@ A small multiplayer party game for exactly 3 players.
 - The host can start once exactly 3 players are in.
 - At the start of each game, one random player becomes the **Agent** and stays the Agent for every round
   of that game. Each round, the other two get the same vague word or concept (e.g. "Tree-like", "Momentum").
+- Each round has a **Judge**, highlighted in gold on the name tags. It rotates around the table each round,
+  starting from a random player.
 - Every round starts on a **Choose your people** screen with no cards showing: everyone names a public
   figure out loud. When 2 of the 3 players tap **Generate Words**, the cards (Agent / word) appear.
 - **Next round** is a vote: when 2 of the 3 players have pressed it, everyone moves to the next round
