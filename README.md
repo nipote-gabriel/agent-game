@@ -17,10 +17,11 @@ A small multiplayer party game for exactly 3 players.
 - **Next round** needs all 3 players to press it before everyone moves to the next round.
   The last round (the host's round count) can't be skipped.
 - **Lock-ins:** at any time, tap a name tag to lock in who you think the Agent is (tap again to unlock).
-  Everyone has this, so the Agent's screen looks the same, but only the Citizens' locks count, and nobody
-  can see anyone else's lock. The moment both Citizens are locked in at once, the game is decided:
-  - both on the Agent → **Citizens win**
-  - on different players → **the Agent wins**
+  Everyone has this, so the Agent's screen looks the same, and nobody can see anyone else's lock.
+  The game is decided the moment:
+  - both Citizens are locked in on the Agent → **Citizens win**
+  - both Citizens are locked in on different players → **the Agent wins**
+  - the Agent and a Citizen are locked in on the same player → **the Agent wins**
 - **The Agent's guess:** once per round the Agent can type a guess at the phrase. Right → **the Agent wins**
   (if the Citizens haven't already caught them).
 - The result screen shows who won and why, the Agent, the phrase, both Citizens' lock-ins and the Agent's

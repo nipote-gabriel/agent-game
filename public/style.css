@@ -202,15 +202,15 @@ input:focus { border-color: var(--accent); }
 .players.chips .lock { font-size: 0.95rem; }
 
 /* Result */
-.result { justify-content: center; gap: 12px; }
+.result { justify-content: center; gap: 10px; }
 .result .label { margin-top: 0; }
-.banner { text-align: center; border-radius: 24px; padding: 16px; display: flex; flex-direction: column; gap: 4px; }
-.banner .logo { font-size: 44px; margin-bottom: 0; }
-.banner h1 { font-size: 2rem; line-height: 1.1; }
+.banner { text-align: center; border-radius: 22px; padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; }
+.banner .logo { font-size: 34px; margin-bottom: 0; }
+.banner h1 { font-size: 1.75rem; line-height: 1.1; }
 .banner p { font-weight: 600; font-size: 1.1rem; opacity: 0.9; }
-.banner p.reason { font-weight: 500; font-size: 0.95rem; opacity: 0.85; }
+.banner p.reason { font-weight: 500; font-size: 0.85rem; opacity: 0.85; }
 .phrase-reveal { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
-.phrase-reveal strong { font-size: 1.7rem; line-height: 1.2; color: #6ee7b7; }
+.phrase-reveal strong { font-size: clamp(1.25rem, 5.6vw, 1.6rem); line-height: 1.2; color: #6ee7b7; }
 .banner.citizens { background: linear-gradient(150deg, #064e3b, var(--word)); }
 .banner.agent { background: linear-gradient(150deg, #7f1d1d, var(--agent)); }
 .reveal { display: flex; align-items: center; justify-content: center; gap: 10px; }

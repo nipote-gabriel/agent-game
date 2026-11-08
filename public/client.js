@@ -450,6 +450,7 @@ function render(s) {
 const REASONS = {
   locked: "Both Citizens locked in on the Agent.",
   split: "The Citizens locked in on different players.",
+  framed: "The Agent and a Citizen locked in on the same player.",
   guessed: "The Agent guessed the phrase.",
 };
 
@@ -482,10 +483,11 @@ function renderResult(s) {
   $("lettersShown").textContent =
     `Ended in round ${n} · the Agent had ${r.lettersShown} of ${total} letters`;
 
-  // Each Citizen's lock-in (the Agent's taps never counted).
+  // Everyone's lock-in. Citizens get ✓/✗; the Agent's row is labelled.
   const list = $("voteList");
   list.innerHTML = "";
-  for (const p of r.roster.filter((p) => p.id !== r.agentId)) {
+  const order = [...r.roster].sort((x, y) => (x.id === r.agentId) - (y.id === r.agentId));
+  for (const p of order) {
     const target = byId[r.locks[p.id]];
     const li = document.createElement("li");
     const who = p.id === s.you ? "You" : p.name;
@@ -500,9 +502,14 @@ function renderResult(s) {
       n1.textContent = who;
       a2.textContent = target.avatar;
       n2.textContent = target.id === s.you ? "you" : target.name;
-      const right = target.id === r.agentId;
-      mark.textContent = right ? "✓" : "✗";
-      mark.classList.add(right ? "right" : "wrong");
+      if (p.id === r.agentId) {
+        mark.textContent = "Agent";
+        mark.classList.add("muted");
+      } else {
+        const right = target.id === r.agentId;
+        mark.textContent = right ? "✓" : "✗";
+        mark.classList.add(right ? "right" : "wrong");
+      }
     }
     list.appendChild(li);
   }
