@@ -187,6 +187,7 @@ $("nextBtn").onclick = (e) => {
   if (!g) return;
   send("vote", { round: g.round, on: !g.votes.includes(state.you) }, e.currentTarget);
 };
+$("genBtn").onclick = (e) => send("reveal", { round: state?.game?.round }, e.currentTarget);
 $("newGameBtn").onclick = (e) => send("newGame", {}, e.currentTarget);
 $("homeBtn").onclick = () => send("leave");
 $("endBtn").onclick = () => {
@@ -237,7 +238,7 @@ function renderCard(animate = false) {
 function render(s) {
   if (s.notice && s.notice.id !== lastNotice && (lastNotice !== null || state)) toast(s.notice.text, { ms: 4000 });
   lastNotice = s.notice ? s.notice.id : "";
-  const prevRound = state?.game?.phase === "play" ? state.game.round : null;
+  const prevReveal = state?.game?.phase === "play" && state.game.stage === "reveal" ? state.game.round : null;
   state = s;
   const isHost = s.you === s.hostId;
   const full = s.players.length === s.maxPlayers;
@@ -281,7 +282,22 @@ function render(s) {
   show("game");
   $("round").textContent = s.game.round;
   $("totalRounds").textContent = s.game.totalRounds;
-  const changed = prevRound !== s.game.round;
+  $("endBtn").style.visibility = isHost ? "visible" : "hidden";
+
+  // Stage 1: everyone names a public figure, then anyone generates the words.
+  const picking = s.game.stage === "pick";
+  $("pickArea").hidden = !picking;
+  $("cardArea").hidden = picking;
+  $("genBtn").hidden = !picking;
+  $("nextBtn").hidden = picking;
+  if (picking) {
+    renderPlayers($("gamePlayers"), s);
+    $("voteHint").textContent = "Tap when everyone has picked";
+    return;
+  }
+
+  // Stage 2: cards are showing.
+  const changed = prevReveal !== s.game.round;
   if (changed) {
     cardCovered = false;
     navigator.vibrate?.(40);
@@ -296,7 +312,6 @@ function render(s) {
   btn.classList.toggle("voted", iVoted);
   btn.classList.toggle("primary", !iVoted);
   $("voteHint").textContent = `${votes.length}/${votesNeeded} votes to ${last ? "start the final vote" : "move on"}`;
-  $("endBtn").style.visibility = isHost ? "visible" : "hidden";
 }
 
 function renderAccuse(s) {

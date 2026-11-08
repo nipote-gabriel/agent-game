@@ -3,10 +3,12 @@
 A small multiplayer party game for exactly 3 players.
 
 - One player creates a lobby and shares the 4-letter code; the others join with it (max 3 per lobby).
-- Everyone picks an avatar. The host (★) sets how many rounds to play.
+- Everyone picks an avatar. The host sets how many rounds to play.
 - The host can start once exactly 3 players are in.
 - At the start of each game, one random player becomes the **Agent** and stays the Agent for every round
   of that game. Each round, the other two get the same vague word or concept (e.g. "Tree-like", "Momentum").
+- Every round starts on a **Choose your people** screen with no cards showing: everyone names a public
+  figure out loud. Then anyone taps **Generate Words** and the cards (Agent / word) appear.
 - **Next round** is a vote: when 2 of the 3 players have pressed it, everyone moves to the next round
   with a new word. Tap it again to take your vote back.
 - After the last round, everyone votes for who they think the Agent is (you can't pick yourself, and you

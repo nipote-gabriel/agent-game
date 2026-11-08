@@ -79,13 +79,24 @@
       <span class="round-pill">Round <b id="round"></b> / <b id="totalRounds"></b></span>
       <span class="spacer"></span>
     </header>
-    <div class="card-area">
+    <!-- Stage 1: name public figures before anyone sees a card -->
+    <div id="pickArea" class="card-area">
+      <div class="pick-panel">
+        <div class="pick-emoji">🎭</div>
+        <h1>Choose your people</h1>
+        <p>Everyone name a <b>public figure</b> out loud.</p>
+        <p class="muted">No peeking: your role and words appear after you generate them.</p>
+      </div>
+    </div>
+    <!-- Stage 2: the cards -->
+    <div id="cardArea" class="card-area" hidden>
       <button id="card" class="card" aria-label="Your card. Tap to hide or show."></button>
       <p id="cardHint" class="muted center">Tap the card to hide it</p>
     </div>
     <ul id="gamePlayers" class="players chips"></ul>
     <footer class="dock">
       <p id="voteHint" class="muted center"></p>
+      <button id="genBtn" class="btn primary big">✨ Generate Words</button>
       <button id="nextBtn" class="btn primary big">Next round</button>
     </footer>
   </section>
