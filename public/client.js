@@ -187,11 +187,6 @@ $("nextBtn").onclick = (e) => {
   if (!g) return;
   send("vote", { round: g.round, on: !g.votes.includes(state.you) }, e.currentTarget);
 };
-$("genBtn").onclick = (e) => {
-  const g = state?.game;
-  if (!g) return;
-  send("reveal", { round: g.round, on: !g.votes.includes(state.you) }, e.currentTarget);
-};
 $("newGameBtn").onclick = (e) => send("newGame", {}, e.currentTarget);
 $("homeBtn").onclick = () => send("leave");
 $("gameLeaveBtn").onclick = () => {
@@ -340,7 +335,7 @@ function renderCard(animate = false) {
 function render(s) {
   if (s.notice && s.notice.id !== lastNotice && (lastNotice !== null || state)) toast(s.notice.text, { ms: 4000 });
   lastNotice = s.notice ? s.notice.id : "";
-  const prevReveal = state?.game?.phase === "play" && state.game.stage === "reveal" ? state.game.round : null;
+  const prevRound = state?.game?.phase === "play" ? state.game.round : null;
   state = s;
   const isHost = s.you === s.hostId;
   const full = s.players.length === s.maxPlayers;
@@ -390,27 +385,11 @@ function render(s) {
     ? "🔒 You're locked in. Tap the name again to unlock."
     : "Think you know the Agent? Tap their name to lock in.";
 
-  // Stage 1: everyone names a public figure, then 2 of 3 generate the cards.
-  const picking = g.stage === "pick";
-  $("pickArea").hidden = !picking;
-  $("cardArea").hidden = picking;
-  $("genBtn").hidden = !picking;
-  if (picking) {
-    $("nextBtn").hidden = true;
-    renderPlayers($("gamePlayers"), s, { votes: g.votes, judgeId: g.judgeId, lockable: true });
-    const iVoted = g.votes.includes(s.you);
-    const gen = $("genBtn");
-    gen.textContent = iVoted ? "✓ Ready · tap to undo" : "✨ Generate Words";
-    gen.classList.toggle("voted", iVoted);
-    gen.classList.toggle("primary", !iVoted);
-    $("voteHint").textContent = `${g.votes.length}/${g.votesNeeded} votes to generate`;
-    return;
-  }
-
-  // Stage 2: cards are showing.
-  const changed = prevReveal !== g.round;
+  // New round: everyone's card flips (so the Agent's screen doesn't stand out) and
+  // the Agent gets a new letter. A hidden card stays hidden until you tap it.
+  const changed = prevRound !== g.round;
   if (changed) {
-    cardCovered = false;
+    if (prevRound === null) cardCovered = false; // a new game starts face up
     navigator.vibrate?.(40);
     if (s.card.type === "agent") {
       prevRoundMask = lastMask;

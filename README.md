@@ -11,10 +11,8 @@ A small multiplayer party game for exactly 3 players.
   synonym as a hint (e.g. "Taboo"), and gets one more random letter every round, Wheel of Fortune style: every copy of a revealed letter shows up.
 - Each round has a **Judge**, highlighted in gold on the name tags. It rotates around the table each round,
   starting from a random player.
-- Round 1 opens straight on the cards. Every later round starts on a **Choose your people** screen with
-  no cards showing: everyone names a public figure out loud. When 2 of the 3 players tap
-  **Generate Words**, the cards appear.
-- **Next round** needs all 3 players to press it before everyone moves to the next round.
+- The cards stay up all game (tap yours to hide it). **Next round** needs all 3 players to press it;
+  each new round reveals one more letter on the Agent's card.
   The last round (the host's round count) can't be skipped.
 - **Lock-ins:** at any time, tap a name tag to lock in who you think the Agent is (tap again to unlock).
   Everyone has this, so the Agent's screen looks the same, and nobody can see anyone else's lock.
@@ -50,7 +48,7 @@ Without the Redis env vars, lobbies are stored in memory. That's fine for local 
 
 ## How it works
 
-- `api/action.js`: every change (create, join, avatar, rounds, start, reveal, vote, lock, guess, new game, leave).
+- `api/action.js`: every change (create, join, avatar, rounds, start, vote, lock, guess, new game, leave).
 - `api/state.js`: each browser polls this about once a second (one Redis read), and pings every 5s
   to say it's still there. That's about 1.4 Redis commands per player per second. Players who stop pinging are removed
   (after 30s in the lobby, or 5 min during a game, so locking your phone briefly doesn't end it).
