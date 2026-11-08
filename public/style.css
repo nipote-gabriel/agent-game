@@ -114,11 +114,16 @@ input:focus { border-color: var(--accent); }
 .players .avatar { font-size: 1.8rem; width: 2.2rem; text-align: center; }
 .players .pname { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .players .tag { font-size: 0.75rem; color: var(--muted); background: var(--panel-2); padding: 2px 8px; border-radius: 99px; }
-.avatars { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+.avatars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .avatar-btn {
-  font-size: 1.8rem; aspect-ratio: 1; border-radius: 14px; border: 2px solid transparent;
-  background: var(--panel); cursor: pointer; touch-action: manipulation; padding: 0;
+  font: inherit; color: var(--text); border-radius: 14px; border: 2px solid transparent;
+  background: var(--panel); cursor: pointer; touch-action: manipulation; padding: 10px 4px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 84px;
 }
+.avatar-btn .av-emoji { font-size: 1.8rem; line-height: 1; }
+.avatar-btn .av-name { font-size: 0.72rem; line-height: 1.15; color: var(--muted); text-align: center; }
+.avatar-btn.selected .av-name { color: var(--text); font-weight: 700; }
+.players .figure { display: block; font-size: 0.75rem; color: var(--muted); }
 .avatar-btn.selected { border-color: var(--accent); background: var(--panel-2); }
 .avatar-btn:disabled { opacity: 0.25; }
 .stepper { display: flex; align-items: center; justify-content: center; gap: 24px; }

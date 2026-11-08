@@ -30,6 +30,16 @@ const info = () => {
   return { name: nameInput.value };
 };
 
+// Only touch the DOM when a value actually changes, so nothing flickers on each poll.
+function setText(el, text) {
+  text = String(text);
+  if (el.textContent !== text) el.textContent = text;
+}
+function setHidden(el, hidden) {
+  hidden = Boolean(hidden);
+  if (el.hidden !== hidden) el.hidden = hidden;
+}
+
 function show(view) {
   for (const v of ["home", "lobby", "game", "over"]) $(v).hidden = v !== view;
 }
@@ -198,14 +208,24 @@ $("endBtn").onclick = () => {
 
 // Player name tags. In a game they double as the lock-in buttons: tap someone to
 // lock them in as the Agent (only you can see your own lock).
-function renderPlayers(ul, s, { showEmpty = false, votes = null, judgeId = null, lockable = false } = {}) {
-  ul.innerHTML = "";
+function renderPlayers(ul, s, { showEmpty = false, votes = null, judgeId = null, lockable = false, figures = false } = {}) {
   const myLock = s.game?.myLock;
+  // Only rebuild when something visible changed, so the tags don't flicker each poll.
+  const key = JSON.stringify([s.players, s.you, s.hostId, showEmpty, votes, judgeId, lockable && myLock, lockable, figures]);
+  if (ul._key === key) return;
+  ul._key = key;
+  ul.innerHTML = "";
   for (const p of s.players) {
     const li = document.createElement("li");
     li.innerHTML = `<span class="avatar"></span><span class="pname"></span>`;
     li.querySelector(".avatar").textContent = p.avatar;
     li.querySelector(".pname").textContent = p.name + (p.id === s.you ? " (you)" : "");
+    if (figures && p.figure) {
+      const fig = document.createElement("span");
+      fig.className = "figure";
+      fig.textContent = p.figure;
+      li.querySelector(".pname").appendChild(fig);
+    }
     if (votes?.includes(p.id)) {
       li.classList.add("voted");
       li.insertAdjacentHTML("beforeend", `<span class="check" aria-label="voted">✓</span>`);
@@ -344,20 +364,26 @@ function render(s) {
     show("lobby");
     $("lobbyCode").textContent = s.code;
     $("playerCount").textContent = `${s.players.length}/${s.maxPlayers}`;
-    renderPlayers($("players"), s, { showEmpty: true });
+    renderPlayers($("players"), s, { showEmpty: true, figures: true });
 
     const me = s.players.find((p) => p.id === s.you);
     const taken = new Set(s.players.filter((p) => p.id !== s.you).map((p) => p.avatar));
     const box = $("avatars");
-    box.innerHTML = "";
-    for (const a of s.avatars) {
-      const b = document.createElement("button");
-      b.textContent = a;
-      b.className = "avatar-btn" + (a === me.avatar ? " selected" : "");
-      b.disabled = taken.has(a);
-      b.setAttribute("aria-label", `Avatar ${a}`);
-      b.onclick = () => send("setAvatar", { avatar: a });
-      box.appendChild(b);
+    const avKey = JSON.stringify([me.avatar, [...taken]]);
+    if (box._key !== avKey) {
+      box._key = avKey;
+      box.innerHTML = "";
+      for (const f of s.avatars) {
+        const b = document.createElement("button");
+        b.className = "avatar-btn" + (f.emoji === me.avatar ? " selected" : "");
+        b.innerHTML = `<span class="av-emoji"></span><span class="av-name"></span>`;
+        b.firstChild.textContent = f.emoji;
+        b.lastChild.textContent = f.name;
+        b.disabled = taken.has(f.emoji);
+        b.setAttribute("aria-label", f.name);
+        b.onclick = () => send("setAvatar", { avatar: f.emoji });
+        box.appendChild(b);
+      }
     }
 
     const rounds = pendingRounds ?? s.rounds;
@@ -377,16 +403,16 @@ function render(s) {
 
   show("game");
   const g = s.game;
-  $("round").textContent = g.round;
-  $("totalRounds").textContent = g.totalRounds;
+  setText($("round"), g.round);
+  setText($("totalRounds"), g.totalRounds);
   $("endBtn").style.visibility = isHost ? "visible" : "hidden";
   const last = g.round >= g.totalRounds;
-  $("lockHint").textContent = g.myLock
+  setText($("lockHint"), g.myLock
     ? "🔒 You're locked in. Tap the name again to unlock."
-    : "Think you know the Agent? Tap their name to lock in.";
+    : "Think you know the Agent? Tap their name to lock in.");
 
-  // New round: everyone's card flips (so the Agent's screen doesn't stand out) and
-  // the Agent gets a new letter. A hidden card stays hidden until you tap it.
+  // New round: the Agent gets a new letter (highlighted). Cards don't animate, so
+  // the Citizens' screens stay still. A hidden card stays hidden until you tap it.
   const changed = prevRound !== g.round;
   if (changed) {
     if (prevRound === null) cardCovered = false; // a new game starts face up
@@ -396,34 +422,34 @@ function render(s) {
       lastMask = s.card.mask;
     }
   }
-  renderCard(changed);
+  renderCard();
 
   // The Agent's guess box (one guess per round).
   const isAgent = s.card.type === "agent";
-  $("guessForm").hidden = !isAgent || !s.card.canGuess;
+  setHidden($("guessForm"), !isAgent || !s.card.canGuess);
   const hint = $("guessHint");
-  hint.hidden = !isAgent;
+  setHidden(hint, !isAgent);
   hint.classList.toggle("wrong", Boolean(s.card.lastGuessWrong));
   if (isAgent) {
-    hint.textContent = s.card.canGuess
+    setText(hint, s.card.canGuess
       ? "Guess the phrase to win. One guess per round."
       : s.card.lastGuessWrong
         ? `"${s.card.lastGuessWrong}" was wrong. You can guess again next round.`
-        : "You've guessed this round.";
+        : "You've guessed this round.");
   }
 
   renderPlayers($("gamePlayers"), s, { votes: g.votes, judgeId: g.judgeId, lockable: true });
   const btn = $("nextBtn");
-  btn.hidden = last;
+  setHidden(btn, last);
   if (last) {
-    $("voteHint").textContent = "Final round: the Citizens must lock in (or the Agent guesses).";
+    setText($("voteHint"), "Final round: the Citizens must lock in (or the Agent guesses).");
     return;
   }
   const iVoted = g.votes.includes(s.you);
-  btn.textContent = iVoted ? "✓ Voted · tap to undo" : "Next round";
+  setText(btn, iVoted ? "✓ Voted · tap to undo" : "Next round");
   btn.classList.toggle("voted", iVoted);
   btn.classList.toggle("primary", !iVoted);
-  $("voteHint").textContent = `${g.votes.length}/${g.votesNeeded} votes to move on`;
+  setText($("voteHint"), `${g.votes.length}/${g.votesNeeded} votes to move on`);
 }
 
 const REASONS = {

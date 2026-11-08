@@ -3,7 +3,7 @@
 A small multiplayer party game for exactly 3 players.
 
 - One player creates a lobby and shares the 4-letter code; the others join with it (max 3 per lobby).
-- Everyone picks an avatar. The host sets how many rounds to play.
+- Everyone picks a public figure as their avatar (Arnold Schwarzenegger, LeBron James, Taylor Swift...). The host sets how many rounds to play.
 - The host can start once exactly 3 players are in.
 - At the start of each game, one random player becomes the **Agent** (for the whole game) and a secret
   **phrase** of at least 16 letters is picked (e.g. "Barking up the wrong tree"). The two **Citizens** see the
