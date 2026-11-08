@@ -137,7 +137,7 @@ input:focus { border-color: var(--accent); }
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
 }
 /* Every card is the same green, so nobody can spot the Agent's screen from across the table. */
-.card.agent, .card.word { background: linear-gradient(150deg, #064e3b, var(--word)); }
+.card.agent, .card.word { background: var(--panel); border: 1px solid var(--line); }
 .card.covered { background: repeating-linear-gradient(45deg, var(--panel), var(--panel) 14px, var(--panel-2) 14px, var(--panel-2) 28px); font-size: 1.2rem; color: var(--muted); }
 .card.flip { animation: flip 0.45s ease; }
 @keyframes flip { from { transform: rotateY(90deg) scale(0.95); } to { transform: none; } }
@@ -184,7 +184,7 @@ input:focus { border-color: var(--accent); }
 .card .mask .ch.punct { border-bottom-color: transparent; }
 .card .mask .ch.new { color: #fde68a; animation: pop 0.5s ease; }
 @keyframes pop { 40% { transform: scale(1.4); } }
-.card .hint { display: flex; align-items: center; gap: 8px; background: rgba(0, 0, 0, 0.22); padding: 6px 14px; border-radius: 99px; }
+.card .hint { display: flex; align-items: center; gap: 8px; background: var(--panel-2); padding: 6px 14px; border-radius: 99px; }
 .card .hint-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.8; }
 .card .hint-word { font-size: 1.15rem; font-weight: 800; }
 .card .letters { font-size: 0.85rem; opacity: 0.85; font-weight: 600; }
