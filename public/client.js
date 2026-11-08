@@ -194,6 +194,9 @@ $("genBtn").onclick = (e) => {
 };
 $("newGameBtn").onclick = (e) => send("newGame", {}, e.currentTarget);
 $("homeBtn").onclick = () => send("leave");
+$("gameLeaveBtn").onclick = () => {
+  if (confirm("Leave the game?\n\nThis ends the game for everyone.")) send("leave");
+};
 $("endBtn").onclick = () => {
   if (confirm("End the game for everyone?")) send("endGame");
 };

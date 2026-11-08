@@ -67,6 +67,7 @@ h1, h2, p { margin: 0; }
 .btn.big { min-height: 56px; font-size: 1.05rem; width: 100%; }
 .btn.small { min-height: 40px; padding: 0 10px; font-size: 0.95rem; }
 .btn.ghost { background: none; color: var(--muted); text-align: left; padding-left: 0; }
+.btn.ghost.leave-right { text-align: right; padding: 0 0 0 10px; }
 .btn.round { width: 56px; height: 56px; padding: 0; border-radius: 50%; font-size: 1.6rem; }
 .row { display: flex; gap: 10px; }
 .row > .btn { flex: 1; }

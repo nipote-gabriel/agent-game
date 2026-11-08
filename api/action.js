@@ -40,7 +40,7 @@ async function act(body) {
     if (!me) return { gone: true };
 
     if (body.action === "leave") {
-      if (game.removePlayers(lobby, [me.token])) await store.saveLobby(lobby);
+      if (game.removePlayers(lobby, [me.token], `${me.name} left, so the game ended.`)) await store.saveLobby(lobby);
       else await store.deleteLobby(code);
       await store.forget(code, [me.token]);
       return { gone: true };
