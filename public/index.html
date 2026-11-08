@@ -85,40 +85,27 @@
         <div class="pick-emoji">🎭</div>
         <h1>Choose your people</h1>
         <p>Everyone name a <b>public figure</b> out loud.</p>
-        <p class="muted">No peeking: your role and words appear after you generate them.</p>
+        <p class="muted">No peeking: your role and the phrase appear after you generate them.</p>
       </div>
     </div>
     <!-- Stage 2: the cards -->
     <div id="cardArea" class="card-area" hidden>
       <button id="card" class="card" aria-label="Your card. Tap to hide or show."></button>
       <p id="cardHint" class="muted center">Tap the card to hide it</p>
+      <!-- Agent only: guess the phrase, once per round -->
+      <form id="guessForm" class="guess" hidden autocomplete="off">
+        <input id="guessInput" maxlength="80" placeholder="Guess the phrase…" autocapitalize="off"
+               autocorrect="off" spellcheck="false" enterkeyhint="send" />
+        <button id="guessBtn" class="btn primary" type="submit">Guess</button>
+      </form>
+      <p id="guessHint" class="muted center" hidden></p>
     </div>
+    <p id="lockHint" class="muted center lock-hint"></p>
     <ul id="gamePlayers" class="players chips"></ul>
     <footer class="dock">
       <p id="voteHint" class="muted center"></p>
       <button id="genBtn" class="btn primary big">✨ Generate Words</button>
       <button id="nextBtn" class="btn primary big">Next round</button>
-    </footer>
-  </section>
-
-  <!-- Accusation vote -->
-  <section id="accuse" class="screen" hidden>
-    <header class="bar">
-      <span class="spacer"></span>
-      <span class="round-pill">Final vote</span>
-      <span class="spacer"></span>
-    </header>
-    <div class="scroll">
-      <div class="accuse-head">
-        <div class="logo">🔍</div>
-        <h1>Who's the Agent?</h1>
-        <p class="muted">Tap the player you think is the Agent. You can change your pick until everyone has voted.</p>
-      </div>
-      <div id="suspects" class="suspects"></div>
-    </div>
-    <footer class="dock">
-      <p id="accuseHint" class="muted center"></p>
-      <ul id="accusePlayers" class="players chips"></ul>
     </footer>
   </section>
 
@@ -129,15 +116,23 @@
         <div id="bannerEmoji" class="logo"></div>
         <h1 id="bannerTitle"></h1>
         <p id="bannerSub"></p>
+        <p id="bannerReason" class="reason"></p>
       </div>
       <div class="reveal">
         <span class="muted">The Agent was</span>
         <div id="agentReveal" class="agent-reveal"></div>
       </div>
-      <h2 class="label">Votes</h2>
+      <div class="phrase-reveal">
+        <span class="muted">The phrase was</span>
+        <strong id="phraseReveal"></strong>
+        <span id="lettersShown" class="muted"></span>
+      </div>
+      <h2 class="label">Citizens' lock-ins</h2>
       <ul id="voteList" class="players votes"></ul>
-      <h2 class="label">The words were</h2>
-      <ol id="wordList" class="word-list"></ol>
+      <div id="guessesBox" hidden>
+        <h2 class="label">The Agent's wrong guesses</h2>
+        <ol id="wordList" class="word-list guesses"></ol>
+      </div>
       <p id="overSummary" class="muted center"></p>
     </div>
     <footer class="dock">

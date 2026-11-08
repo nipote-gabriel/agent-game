@@ -31,7 +31,7 @@ const info = () => {
 };
 
 function show(view) {
-  for (const v of ["home", "lobby", "game", "accuse", "over"]) $(v).hidden = v !== view;
+  for (const v of ["home", "lobby", "game", "over"]) $(v).hidden = v !== view;
 }
 
 function toast(msg, { error = false, ms = 3000 } = {}) {
@@ -198,17 +198,24 @@ $("endBtn").onclick = () => {
   if (confirm("End the game for everyone?")) send("endGame");
 };
 
-function renderPlayers(ul, s, { showEmpty = false, votes = null, judgeId = null } = {}) {
+// Player name tags. In a game they double as the lock-in buttons: tap someone to
+// lock them in as the Agent (only you can see your own lock).
+function renderPlayers(ul, s, { showEmpty = false, votes = null, judgeId = null, lockable = false } = {}) {
   ul.innerHTML = "";
+  const myLock = s.game?.myLock;
   for (const p of s.players) {
     const li = document.createElement("li");
     li.innerHTML = `<span class="avatar"></span><span class="pname"></span>`;
+    li.querySelector(".avatar").textContent = p.avatar;
+    li.querySelector(".pname").textContent = p.name + (p.id === s.you ? " (you)" : "");
     if (votes?.includes(p.id)) {
       li.classList.add("voted");
       li.insertAdjacentHTML("beforeend", `<span class="check" aria-label="voted">✓</span>`);
     }
-    li.querySelector(".avatar").textContent = p.avatar;
-    li.querySelector(".pname").textContent = p.name + (p.id === s.you ? " (you)" : "");
+    if (lockable && p.id === myLock) {
+      li.classList.add("locked");
+      li.insertAdjacentHTML("beforeend", `<span class="lock" aria-label="locked in">🔒</span>`);
+    }
     if (p.id === judgeId) {
       li.classList.add("judge");
       const tag = document.createElement("span");
@@ -220,6 +227,11 @@ function renderPlayers(ul, s, { showEmpty = false, votes = null, judgeId = null 
       tag.className = "tag";
       tag.textContent = "host";
       li.appendChild(tag);
+    }
+    if (lockable && p.id !== s.you) {
+      li.classList.add("lockable");
+      li.setAttribute("role", "button");
+      li.onclick = () => toggleLock(p);
     }
     ul.appendChild(li);
   }
@@ -233,11 +245,81 @@ function renderPlayers(ul, s, { showEmpty = false, votes = null, judgeId = null 
   }
 }
 
+function toggleLock(p) {
+  const g = state?.game;
+  if (!g || g.phase !== "play") return;
+  if (g.myLock === p.id) {
+    if (confirm(`Unlock ${p.name}?`)) send("lock", { target: null });
+  } else if (confirm(`Lock in ${p.name} as the Agent?\n\nIf both Citizens are locked in at the same time, the game ends.`)) {
+    send("lock", { target: p.id });
+  }
+}
+
+// --- Agent's guess ---
+$("guessForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const text = $("guessInput").value.trim();
+  if (!text) return $("guessInput").focus();
+  if (!confirm(`Guess "${text}"?\n\nYou get one guess per round.`)) return;
+  $("guessInput").blur();
+  await send("guess", { text }, $("guessBtn"));
+  if (state?.card?.lastGuessWrong) $("guessInput").value = "";
+});
+
+// The Agent's mask from the previous round, to highlight newly revealed letters.
+let prevRoundMask = null;
+let lastMask = null;
+let cardKey = null;
 function renderCard(animate = false) {
   const card = $("card");
-  if (!state?.card) return;
-  card.className = "card " + (cardCovered ? "covered" : state.card.type);
-  card.textContent = cardCovered ? "Tap to reveal" : state.card.text;
+  const c = state?.card;
+  if (!c) return;
+  // Only rebuild when something changed, so animations don't replay every poll.
+  const key = [cardCovered, c.type, c.mask, c.text].join("|");
+  if (key === cardKey && !animate) return;
+  cardKey = key;
+  card.className = "card " + (cardCovered ? "covered" : c.type);
+  card.innerHTML = "";
+  if (cardCovered) {
+    card.textContent = "Tap to reveal";
+  } else if (c.type === "agent") {
+    // Hangman blanks; letters revealed since last time get a highlight.
+    const label = document.createElement("span");
+    label.className = "card-label";
+    label.textContent = "🕵️ You're the Agent";
+    const mask = document.createElement("span");
+    mask.className = "phrase mask";
+    let i = 0;
+    for (const word of c.mask.split(" ")) {
+      const w = document.createElement("span");
+      w.className = "word";
+      for (const ch of word) {
+        const span = document.createElement("span");
+        const isBlank = ch === "_";
+        span.className = "ch" + (/[a-z0-9_]/i.test(ch) ? "" : " punct");
+        if (!isBlank && prevRoundMask && prevRoundMask[i] === "_") span.classList.add("new");
+        span.textContent = isBlank ? "\u00a0" : ch.toUpperCase();
+        w.appendChild(span);
+        i++;
+      }
+      i++; // the space
+      mask.appendChild(w);
+    }
+    const blanks = (c.mask.match(/_/g) || []).length;
+    const total = (c.mask.match(/[a-z0-9_]/gi) || []).length;
+    const letters = document.createElement("span");
+    letters.className = "letters";
+    letters.textContent = `${total - blanks} of ${total} letters shown`;
+    card.append(label, mask, letters);
+  } else {
+    const label = document.createElement("span");
+    label.className = "card-label";
+    label.textContent = "Citizen · the phrase is";
+    const phrase = document.createElement("span");
+    phrase.className = "phrase";
+    phrase.textContent = c.text;
+    card.append(label, phrase);
+  }
   $("cardHint").textContent = cardCovered ? "Card hidden" : "Tap the card to hide it";
   if (animate) {
     void card.offsetWidth; // restart the flip animation
@@ -286,135 +368,143 @@ function render(s) {
     return;
   }
 
-  if (s.game.phase === "accuse") return renderAccuse(s);
   if (s.game.phase === "result") return renderResult(s);
 
   show("game");
-  $("round").textContent = s.game.round;
-  $("totalRounds").textContent = s.game.totalRounds;
+  const g = s.game;
+  $("round").textContent = g.round;
+  $("totalRounds").textContent = g.totalRounds;
   $("endBtn").style.visibility = isHost ? "visible" : "hidden";
+  const last = g.round >= g.totalRounds;
+  $("lockHint").textContent = g.myLock
+    ? "🔒 You're locked in. Tap the name again to unlock."
+    : "Think you know the Agent? Tap their name to lock in.";
 
-  // Stage 1: everyone names a public figure, then anyone generates the words.
-  const picking = s.game.stage === "pick";
+  // Stage 1: everyone names a public figure, then 2 of 3 generate the cards.
+  const picking = g.stage === "pick";
   $("pickArea").hidden = !picking;
   $("cardArea").hidden = picking;
   $("genBtn").hidden = !picking;
-  $("nextBtn").hidden = picking;
   if (picking) {
-    const { votes, votesNeeded } = s.game;
-    renderPlayers($("gamePlayers"), s, { votes, judgeId: s.game.judgeId });
-    const iVoted = votes.includes(s.you);
+    $("nextBtn").hidden = true;
+    renderPlayers($("gamePlayers"), s, { votes: g.votes, judgeId: g.judgeId, lockable: true });
+    const iVoted = g.votes.includes(s.you);
     const gen = $("genBtn");
     gen.textContent = iVoted ? "✓ Ready · tap to undo" : "✨ Generate Words";
     gen.classList.toggle("voted", iVoted);
     gen.classList.toggle("primary", !iVoted);
-    $("voteHint").textContent = `${votes.length}/${votesNeeded} votes to generate`;
+    $("voteHint").textContent = `${g.votes.length}/${g.votesNeeded} votes to generate`;
     return;
   }
 
   // Stage 2: cards are showing.
-  const changed = prevReveal !== s.game.round;
+  const changed = prevReveal !== g.round;
   if (changed) {
     cardCovered = false;
     navigator.vibrate?.(40);
+    if (s.card.type === "agent") {
+      prevRoundMask = lastMask;
+      lastMask = s.card.mask;
+    }
   }
   renderCard(changed);
-  const { votes, votesNeeded } = s.game;
-  renderPlayers($("gamePlayers"), s, { votes, judgeId: s.game.judgeId });
-  const iVoted = votes.includes(s.you);
-  const last = s.game.round >= s.game.totalRounds;
+
+  // The Agent's guess box (one guess per round).
+  const isAgent = s.card.type === "agent";
+  $("guessForm").hidden = !isAgent || !s.card.canGuess;
+  const hint = $("guessHint");
+  hint.hidden = !isAgent;
+  hint.classList.toggle("wrong", Boolean(s.card.lastGuessWrong));
+  if (isAgent) {
+    hint.textContent = s.card.canGuess
+      ? "Guess the phrase to win. One guess per round."
+      : s.card.lastGuessWrong
+        ? `"${s.card.lastGuessWrong}" was wrong. You can guess again next round.`
+        : "You've guessed this round.";
+  }
+
+  renderPlayers($("gamePlayers"), s, { votes: g.votes, judgeId: g.judgeId, lockable: true });
   const btn = $("nextBtn");
-  btn.textContent = iVoted ? "✓ Voted · tap to undo" : last ? "Vote for the Agent" : "Next round";
+  btn.hidden = last;
+  if (last) {
+    $("voteHint").textContent = "Final round: the Citizens must lock in (or the Agent guesses).";
+    return;
+  }
+  const iVoted = g.votes.includes(s.you);
+  btn.textContent = iVoted ? "✓ Voted · tap to undo" : "Next round";
   btn.classList.toggle("voted", iVoted);
   btn.classList.toggle("primary", !iVoted);
-  $("voteHint").textContent = `${votes.length}/${votesNeeded} votes to ${last ? "start the final vote" : "move on"}`;
+  $("voteHint").textContent = `${g.votes.length}/${g.votesNeeded} votes to move on`;
 }
 
-function renderAccuse(s) {
-  show("accuse");
-  const { accused, myAccusation } = s.game;
-  const box = $("suspects");
-  box.innerHTML = "";
-  for (const p of s.players.filter((p) => p.id !== s.you)) {
-    const b = document.createElement("button");
-    b.className = "suspect" + (p.id === myAccusation ? " selected" : "");
-    b.innerHTML = `<span class="big-avatar"></span><span class="sname"></span><span class="pick"></span>`;
-    b.querySelector(".big-avatar").textContent = p.avatar;
-    b.querySelector(".sname").textContent = p.name;
-    b.querySelector(".pick").textContent = p.id === myAccusation ? "🕵️ Your pick" : "Tap to accuse";
-    b.onclick = () => p.id !== myAccusation && send("accuse", { target: p.id }, b);
-    box.appendChild(b);
-  }
-  const waiting = s.players.length - accused.length;
-  $("accuseHint").textContent = myAccusation
-    ? `Waiting for ${waiting} more vote${waiting === 1 ? "" : "s"}…`
-    : `${accused.length}/${s.players.length} have voted`;
-  renderPlayers($("accusePlayers"), s, { votes: accused });
-}
-
-const OUTCOMES = {
-  citizens: { emoji: "🎉", title: "Citizens win!" },
-  agent: { emoji: "🕵️", title: "The Agent wins!" },
-  stalemate: { emoji: "🤝", title: "Stalemate" },
+const REASONS = {
+  locked: "Both Citizens locked in on the Agent.",
+  split: "The Citizens locked in on different players.",
+  guessed: "The Agent guessed the phrase.",
 };
 
 function renderResult(s) {
   const firstShow = $("over").hidden;
   show("over");
-  const { outcome, agentId, accusations, roster, words } = s.game.result;
-  const byId = Object.fromEntries(roster.map((p) => [p.id, p]));
-  const iAmAgent = s.you === agentId;
+  lastMask = prevRoundMask = cardKey = null;
+  const r = s.game.result;
+  const byId = Object.fromEntries(r.roster.map((p) => [p.id, p]));
+  const iAmAgent = s.you === r.agentId;
+  const iWon = (r.outcome === "agent") === iAmAgent;
 
-  const o = OUTCOMES[outcome];
-  $("banner").className = "banner " + outcome;
-  $("bannerEmoji").textContent = o.emoji;
-  $("bannerTitle").textContent = o.title;
-  $("bannerSub").textContent =
-    outcome === "stalemate"
-      ? "Everyone voted differently. Nobody wins."
-      : (outcome === "agent") === iAmAgent
-        ? "You won! 🏆"
-        : "You lost.";
-  if (firstShow) navigator.vibrate?.(outcome === "stalemate" ? 60 : [60, 60, 120]);
+  $("banner").className = "banner " + r.outcome;
+  $("bannerEmoji").textContent = r.outcome === "citizens" ? "🎉" : "🕵️";
+  $("bannerTitle").textContent = r.outcome === "citizens" ? "Citizens win!" : "The Agent wins!";
+  $("bannerSub").textContent = iWon ? "You won! 🏆" : "You lost.";
+  $("bannerReason").textContent =
+    r.reason === "guessed" ? `The Agent guessed "${r.winningGuess}".` : REASONS[r.reason];
+  if (firstShow) navigator.vibrate?.(iWon ? [60, 60, 120] : 60);
 
-  const agent = byId[agentId];
+  const agent = byId[r.agentId];
   $("agentReveal").innerHTML = `<span class="avatar"></span><span></span>`;
   $("agentReveal").firstChild.textContent = agent.avatar;
   $("agentReveal").lastChild.textContent = agent.name + (iAmAgent ? " (you)" : "");
 
+  $("phraseReveal").textContent = r.phrase;
+  const total = (r.phrase.match(/[a-z0-9]/gi) || []).length;
+  const n = s.game.round;
+  $("lettersShown").textContent =
+    `Ended in round ${n} · the Agent had ${r.lettersShown} of ${total} letters`;
+
+  // Each Citizen's lock-in (the Agent's taps never counted).
   const list = $("voteList");
   list.innerHTML = "";
-  for (const p of [...roster].sort((x, y) => (x.id === agentId) - (y.id === agentId))) {
-    const target = byId[accusations[p.id]];
-    const right = target.id === agentId;
+  for (const p of r.roster.filter((p) => p.id !== r.agentId)) {
+    const target = byId[r.locks[p.id]];
     const li = document.createElement("li");
-    li.innerHTML = `<span class="avatar"></span><span class="pname"></span><span class="arrow">→</span><span class="avatar"></span><span class="pname"></span><span class="mark"></span>`;
-    const [a1, n1, , a2, n2, mark] = li.children;
-    a1.textContent = p.avatar;
-    n1.textContent = p.id === s.you ? "You" : p.name;
-    a2.textContent = target.avatar;
-    n2.textContent = target.id === s.you ? "you" : target.name;
-    if (p.id !== agentId) {
+    const who = p.id === s.you ? "You" : p.name;
+    if (!target) {
+      li.innerHTML = `<span class="avatar"></span><span class="pname"></span><span class="mark muted">not locked</span>`;
+      li.children[0].textContent = p.avatar;
+      li.children[1].textContent = who;
+    } else {
+      li.innerHTML = `<span class="avatar"></span><span class="pname"></span><span class="arrow">🔒</span><span class="avatar"></span><span class="pname"></span><span class="mark"></span>`;
+      const [a1, n1, , a2, n2, mark] = li.children;
+      a1.textContent = p.avatar;
+      n1.textContent = who;
+      a2.textContent = target.avatar;
+      n2.textContent = target.id === s.you ? "you" : target.name;
+      const right = target.id === r.agentId;
       mark.textContent = right ? "✓" : "✗";
       mark.classList.add(right ? "right" : "wrong");
-    } else {
-      mark.textContent = "Agent";
-      mark.classList.add("muted");
     }
     list.appendChild(li);
   }
-  const wordList = $("wordList");
-  wordList.innerHTML = "";
-  words.forEach((w, i) => {
-    const li = document.createElement("li");
-    li.innerHTML = `<span class="rnum"></span><span class="w"></span>`;
-    li.firstChild.textContent = words.length > 1 ? `R${i + 1}` : "";
-    li.lastChild.textContent = w;
-    wordList.appendChild(li);
-  });
 
-  const n = s.game.totalRounds;
-  $("overSummary").textContent = `${n} round${n > 1 ? "s" : ""} played`;
+  const guesses = $("wordList");
+  guesses.innerHTML = "";
+  for (const text of r.guesses) {
+    const li = document.createElement("li");
+    li.textContent = text;
+    guesses.appendChild(li);
+  }
+  $("guessesBox").hidden = !r.guesses.length;
+  $("overSummary").textContent = "";
 }
 
 // Start: rejoin our lobby after a reload, or prefill a code from an invite link.
