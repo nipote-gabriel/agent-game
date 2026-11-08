@@ -178,6 +178,9 @@ input:focus { border-color: var(--accent); }
 .card .mask .ch.punct { border-bottom-color: transparent; }
 .card .mask .ch.new { color: #fde68a; animation: pop 0.5s ease; }
 @keyframes pop { 40% { transform: scale(1.4); } }
+.card .hint { display: flex; align-items: center; gap: 8px; background: rgba(0, 0, 0, 0.22); padding: 6px 14px; border-radius: 99px; }
+.card .hint-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.8; }
+.card .hint-word { font-size: 1.15rem; font-weight: 800; }
 .card .letters { font-size: 0.85rem; opacity: 0.85; font-weight: 600; }
 .card-area { gap: 8px; }
 .guess { display: flex; gap: 8px; }

@@ -305,12 +305,19 @@ function renderCard(animate = false) {
       i++; // the space
       mask.appendChild(w);
     }
+    let hint = null;
+    if (c.hint) {
+      hint = document.createElement("span");
+      hint.className = "hint";
+      hint.innerHTML = `<span class="hint-label">Hint</span><span class="hint-word"></span>`;
+      hint.lastChild.textContent = c.hint;
+    }
     const blanks = (c.mask.match(/_/g) || []).length;
     const total = (c.mask.match(/[a-z0-9_]/gi) || []).length;
     const letters = document.createElement("span");
     letters.className = "letters";
     letters.textContent = `${total - blanks} of ${total} letters shown`;
-    card.append(label, mask, letters);
+    card.append(...[label, mask, hint, letters].filter(Boolean));
   } else {
     const label = document.createElement("span");
     label.className = "card-label";
@@ -466,6 +473,7 @@ function renderResult(s) {
   $("agentReveal").lastChild.textContent = agent.name + (iAmAgent ? " (you)" : "");
 
   $("phraseReveal").textContent = r.phrase;
+  $("hintReveal").textContent = r.hint ? `The Agent's hint: ${r.hint}` : "";
   const total = (r.phrase.match(/[a-z0-9]/gi) || []).length;
   const n = s.game.round;
   $("lettersShown").textContent =

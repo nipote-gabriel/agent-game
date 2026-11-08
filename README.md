@@ -7,8 +7,8 @@ A small multiplayer party game for exactly 3 players.
 - The host can start once exactly 3 players are in.
 - At the start of each game, one random player becomes the **Agent** (for the whole game) and a secret
   **phrase** of at least 12 letters is picked (e.g. "Elephant in the room"). The two **Citizens** see the
-  whole phrase; the Agent only sees blanks. The Agent starts with the phrase's first letter and gets one more
-  random letter every round, Wheel of Fortune style: every copy of a revealed letter shows up.
+  whole phrase; the Agent only sees blanks. The Agent starts with the first letter of every word plus a one-word
+  synonym as a hint (e.g. "Taboo"), and gets one more random letter every round, Wheel of Fortune style: every copy of a revealed letter shows up.
 - Each round has a **Judge**, highlighted in gold on the name tags. It rotates around the table each round,
   starting from a random player.
 - Every round starts on a **Choose your people** screen with no cards showing: everyone names a public
