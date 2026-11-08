@@ -6,7 +6,7 @@ A small multiplayer party game for exactly 3 players.
 - Everyone picks an avatar. The host sets how many rounds to play.
 - The host can start once exactly 3 players are in.
 - At the start of each game, one random player becomes the **Agent** (for the whole game) and a secret
-  **phrase** of at least 12 letters is picked (e.g. "Elephant in the room"). The two **Citizens** see the
+  **phrase** of at least 16 letters is picked (e.g. "Barking up the wrong tree"). The two **Citizens** see the
   whole phrase; the Agent only sees blanks. The Agent starts with the first letter of every word plus a one-word
   synonym as a hint (e.g. "Taboo"), and gets one more random letter every round, Wheel of Fortune style: every copy of a revealed letter shows up.
 - Each round has a **Judge**, highlighted in gold on the name tags. It rotates around the table each round,
@@ -14,7 +14,7 @@ A small multiplayer party game for exactly 3 players.
 - Round 1 opens straight on the cards. Every later round starts on a **Choose your people** screen with
   no cards showing: everyone names a public figure out loud. When 2 of the 3 players tap
   **Generate Words**, the cards appear.
-- **Next round** is a vote: when 2 of the 3 players have pressed it, everyone moves to the next round.
+- **Next round** needs all 3 players to press it before everyone moves to the next round.
   The last round (the host's round count) can't be skipped.
 - **Lock-ins:** at any time, tap a name tag to lock in who you think the Agent is (tap again to unlock).
   Everyone has this, so the Agent's screen looks the same, but only the Citizens' locks count, and nobody

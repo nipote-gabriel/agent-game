@@ -291,7 +291,7 @@ function renderCard(animate = false) {
     label.className = "card-label";
     label.textContent = "🕵️ You're the Agent";
     const mask = document.createElement("span");
-    mask.className = "phrase mask";
+    mask.className = "phrase mask" + (c.mask.replace(/[^a-z0-9_]/gi, "").length > 20 ? " long" : "");
     let i = 0;
     for (const word of c.mask.split(" ")) {
       const w = document.createElement("span");
@@ -326,7 +326,7 @@ function renderCard(animate = false) {
     label.className = "card-label";
     label.textContent = "Citizen · the phrase is";
     const phrase = document.createElement("span");
-    phrase.className = "phrase";
+    phrase.className = "phrase" + (c.text.length > 24 ? " long" : "");
     phrase.textContent = c.text;
     card.append(label, phrase);
   }
