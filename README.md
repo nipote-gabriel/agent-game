@@ -52,6 +52,8 @@ Without the Redis env vars, lobbies are stored in memory. That's fine for local 
 - `api/state.js`: each browser polls this about once a second (one Redis read), and pings every 5s
   to say it's still there. That's about 1.4 Redis commands per player per second. Players who stop pinging are removed
   (after 30s in the lobby, or 5 min during a game, so locking your phone briefly doesn't end it).
-- `lib/game.js`: game rules. `lib/words.js`: the phrase list. `lib/store.js`: Redis or in-memory storage.
+- `lib/game.js`: game rules. `lib/words.js`: the phrase list (about 200, each
+  with a one-word hint). Recently dealt phrases are remembered across all lobbies, so a phrase only
+  comes back once most of the list has been played. `lib/store.js`: Redis or in-memory storage.
 - `public/`: plain HTML/CSS/JS frontend, no build step.
 - Reloading the page puts you back in your lobby.
